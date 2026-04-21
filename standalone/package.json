@@ -1,0 +1,23 @@
+{
+  "name": "pixel-agents-standalone",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Serve the pixel-agents webview outside VS Code over WebSocket by tailing Claude Code JSONL transcripts.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "pngjs": "^7.0.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "@types/pngjs": "^6.0.5",
+    "@types/ws": "^8.5.12",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

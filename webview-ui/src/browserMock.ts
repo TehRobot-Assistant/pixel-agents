@@ -235,6 +235,27 @@ export async function initBrowserMock(): Promise<void> {
   );
 }
 
+function dispatch(data: unknown): void {
+  window.dispatchEvent(new MessageEvent('message', { data }));
+}
+
+/**
+ * Dispatch ONLY the asset/layout messages — no settings, no mock agents.
+ * Used by the WebSocket runtime: the server supplies settings and drives
+ * agent lifecycle, but assets come from the static server (same pipeline).
+ */
+export function dispatchAssetMessages(): void {
+  if (!mockPayload) return;
+  const { characters, floorSprites, wallSets, furnitureCatalog, furnitureSprites, layout } =
+    mockPayload;
+  dispatch({ type: 'characterSpritesLoaded', characters });
+  dispatch({ type: 'floorTilesLoaded', sprites: floorSprites });
+  dispatch({ type: 'wallTilesLoaded', sets: wallSets });
+  dispatch({ type: 'furnitureAssetsLoaded', catalog: furnitureCatalog, sprites: furnitureSprites });
+  dispatch({ type: 'layoutLoaded', layout });
+  console.log('[BrowserMock] Asset messages dispatched (websocket runtime)');
+}
+
 /**
  * Call inside a useEffect in App.tsx — after the window message listener
  * in useExtensionMessages has been registered.
@@ -242,20 +263,9 @@ export async function initBrowserMock(): Promise<void> {
 export function dispatchMockMessages(): void {
   if (!mockPayload) return;
 
-  const { characters, floorSprites, wallSets, furnitureCatalog, furnitureSprites, layout } =
-    mockPayload;
-
-  function dispatch(data: unknown): void {
-    window.dispatchEvent(new MessageEvent('message', { data }));
-  }
-
   // Must match the load order defined in CLAUDE.md:
   // characterSpritesLoaded → floorTilesLoaded → wallTilesLoaded → furnitureAssetsLoaded → layoutLoaded
-  dispatch({ type: 'characterSpritesLoaded', characters });
-  dispatch({ type: 'floorTilesLoaded', sprites: floorSprites });
-  dispatch({ type: 'wallTilesLoaded', sets: wallSets });
-  dispatch({ type: 'furnitureAssetsLoaded', catalog: furnitureCatalog, sprites: furnitureSprites });
-  dispatch({ type: 'layoutLoaded', layout });
+  dispatchAssetMessages();
   dispatch({
     type: 'settingsLoaded',
     soundEnabled: false,
