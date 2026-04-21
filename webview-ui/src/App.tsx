@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { toMajorMinor } from './changelogData.js';
+import { ActiveTasksPanel } from './components/ActiveTasksPanel.js';
 import { BottomToolbar } from './components/BottomToolbar.js';
 import { ChangelogModal } from './components/ChangelogModal.js';
 import { DebugView } from './components/DebugView.js';
@@ -144,6 +145,25 @@ function App() {
     const meta = os.subagentMeta.get(agentId);
     const focusId = meta ? meta.parentAgentId : agentId;
     vscode.postMessage({ type: 'focusAgent', id: focusId });
+  }, []);
+
+  // Focus an agent from the Active Tasks side panel: updates canvas selection,
+  // camera-follow, posts focusAgent (so the VS Code runtime also focuses the
+  // underlying terminal — the standalone server ignores this message), and
+  // triggers a short-lived highlight pulse on the character.
+  const handlePanelSelect = useCallback((agentId: number) => {
+    const os = getOfficeState();
+    os.selectedAgentId = agentId;
+    os.cameraFollowId = agentId;
+    const ch = os.characters.get(agentId);
+    if (ch) {
+      ch.highlightUntil = Date.now() + 600;
+    }
+    // Sync React's selectedAgent via the same message path the extension uses.
+    window.dispatchEvent(
+      new MessageEvent('message', { data: { type: 'agentSelected', id: agentId } }),
+    );
+    vscode.postMessage({ type: 'focusAgent', id: agentId });
   }, []);
 
   const officeState = getOfficeState();
@@ -333,6 +353,16 @@ function App() {
         onToggleSettings={() => setIsSettingsOpen((v) => !v)}
         workspaceFolders={workspaceFolders}
       />
+
+      {!isDebugMode && (
+        <ActiveTasksPanel
+          agents={agents}
+          agentTools={agentTools}
+          agentStatuses={agentStatuses}
+          characters={officeState.characters}
+          onSelect={handlePanelSelect}
+        />
+      )}
 
       <VersionIndicator
         currentVersion={extensionVersion}

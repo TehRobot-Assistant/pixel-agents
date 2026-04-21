@@ -41,6 +41,12 @@ export const CHARACTER_Z_SORT_OFFSET = 0.5;
 export const OUTLINE_Z_SORT_OFFSET = 0.001;
 export const SELECTED_OUTLINE_ALPHA = 1.0;
 export const HOVERED_OUTLINE_ALPHA = 0.5;
+/** Duration (ms) of the Active Tasks panel focus pulse on a character. */
+export const HIGHLIGHT_PULSE_DURATION_MS = 600;
+/** Base outline alpha during a highlight pulse (before the sin sweep adds on top). */
+export const HIGHLIGHT_PULSE_BASE_ALPHA = 0.6;
+/** Peak additional alpha added on top of the base during a highlight pulse. */
+export const HIGHLIGHT_PULSE_RANGE_ALPHA = 0.4;
 export const GHOST_PREVIEW_SPRITE_ALPHA = 0.5;
 export const GHOST_PREVIEW_TINT_ALPHA = 0.25;
 export const SELECTION_DASH_PATTERN: [number, number] = [4, 3];

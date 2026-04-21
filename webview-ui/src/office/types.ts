@@ -196,4 +196,6 @@ export interface Character {
   inputTokens: number;
   /** Cumulative output tokens consumed */
   outputTokens: number;
+  /** Timestamp (ms) until which the character should render a highlight pulse. 0 = no highlight. */
+  highlightUntil?: number;
 }

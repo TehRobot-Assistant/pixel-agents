@@ -21,6 +21,9 @@ import {
   GHOST_PREVIEW_TINT_ALPHA,
   GHOST_VALID_TINT,
   GRID_LINE_COLOR,
+  HIGHLIGHT_PULSE_BASE_ALPHA,
+  HIGHLIGHT_PULSE_DURATION_MS,
+  HIGHLIGHT_PULSE_RANGE_ALPHA,
   HOVERED_OUTLINE_ALPHA,
   OUTLINE_Z_SORT_OFFSET,
   ROTATE_BUTTON_BG,
@@ -176,10 +179,14 @@ export function renderScene(
       continue;
     }
 
-    // White outline: full opacity for selected, 50% for hover
+    // White outline: full opacity for selected, 50% for hover.
+    // Highlight pulse: active-tasks-panel focus flash — yellow tint that
+    // pulses for ~600ms after selection from the panel.
     const isSelected = selectedAgentId !== null && ch.id === selectedAgentId;
     const isHovered = hoveredAgentId !== null && ch.id === hoveredAgentId;
-    if (isSelected || isHovered) {
+    const now = Date.now();
+    const highlightActive = (ch.highlightUntil ?? 0) > now;
+    if (isSelected || isHovered || highlightActive) {
       const outlineAlpha = isSelected ? SELECTED_OUTLINE_ALPHA : HOVERED_OUTLINE_ALPHA;
       const outlineData = getOutlineSprite(spriteData);
       const outlineCached = getCachedSprite(outlineData, zoom);
@@ -189,7 +196,15 @@ export function renderScene(
         zY: charZY - OUTLINE_Z_SORT_OFFSET, // sort just before character
         draw: (c) => {
           c.save();
-          c.globalAlpha = outlineAlpha;
+          if (highlightActive) {
+            // Pulse: sin sweep over the ~600ms window so the highlight fades in then out.
+            const remaining = (ch.highlightUntil ?? 0) - now;
+            const t = Math.max(0, Math.min(1, 1 - remaining / HIGHLIGHT_PULSE_DURATION_MS));
+            const pulse = Math.sin(t * Math.PI); // 0 → 1 → 0
+            c.globalAlpha = HIGHLIGHT_PULSE_BASE_ALPHA + HIGHLIGHT_PULSE_RANGE_ALPHA * pulse;
+          } else {
+            c.globalAlpha = outlineAlpha;
+          }
           c.drawImage(outlineCached, olDrawX, olDrawY);
           c.restore();
         },
